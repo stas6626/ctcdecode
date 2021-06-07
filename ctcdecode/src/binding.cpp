@@ -183,6 +183,7 @@ std::pair<torch::Tensor, torch::Tensor> beam_decode_with_given_state(at::Tensor 
     std::vector<std::vector<std::pair<double, Output>>> batch_results =
     ctc_beam_search_decoder_batch_with_states(inputs, num_processes, states, is_eos_s);
     
+    // getting returning tensor shapes, in case of ono equal vectors
     int max_result_size = 0;
     int max_output_tokens_size = 0;
     for (int b = 0; b < batch_results.size(); ++b){
@@ -197,13 +198,13 @@ std::pair<torch::Tensor, torch::Tensor> beam_decode_with_given_state(at::Tensor 
             
             if (output_tokens.size() > max_output_tokens_size) {
             max_output_tokens_size = output_tokens.size();
+            }
         }
-        }
-        }
+    }
     
+    // creating new tensors for changed dims out tokens and timestamps
     torch::Tensor output_tokens_tensor = torch::randint(1, {batch_results.size(), max_result_size, max_output_tokens_size});
     torch::Tensor output_timesteps_tensor = torch::randint(1, {batch_results.size(), max_result_size, max_output_tokens_size});
-
 
     auto scores_accessor =  th_scores.accessor<float, 2>();
     auto out_length_accessor =  th_out_length.accessor<int, 2>();
